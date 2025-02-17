@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Chat Client</title>
+</head>
+<body>
+    <h1>Magic Mirror Client</h1>
+
+    <input type="text" id="messageInput" placeholder="Enter message">
+    <button id="sendButton">Send Message</button>
+    <button id="startAudioButton">Start Audio</button>
+    <button id="stopAudioButton">Stop Audio</button>
+
+    <ul id="messagesList"></ul>
+    <audio id="audioPlayer" controls></audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chathub")
+            .build();
+
+        connection.on("ReceiveMessage", function (message) {
+            var li = document.createElement("li");
+            li.textContent = message;
+            document.getElementById("messagesList").appendChild(li);
+        });
+
+        connection.on("ReceiveAudio", function (audioBase64) {
+            const audioSource = `data:audio/mp3;base64,${audioBase64}`;
+            const audioPlayer = document.getElementById("audioPlayer");
+            audioPlayer.src = audioSource;
+            audioPlayer.play();
+        });
+
+        connection.start().then(function () {
+            console.log("SignalR Connected.");
+            document.getElementById("sendButton").disabled = false;
+            document.getElementById("startAudioButton").disabled = false;
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        document.getElementById("sendButton").addEventListener("click", function (event) {
+            var message = document.getElementById("messageInput").value;
+            connection.invoke("SendMessage", message).catch(function (err) {
+                return console.error(err.toString());
+            });
+            event.preventDefault();
+        });
+
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioStream;
+
+        document.getElementById("startAudioButton").addEventListener("click", async () => {
+            try {
+                console.log("Accessing microphone...");
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(audioStream);
+
+                mediaRecorder.ondataavailable = event => {
+                    console.log("Audio data available");
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    console.log("Audio recording stopped");
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); // Or 'audio/webm'
+                    audioChunks = [];
+
+                    console.log("Sending audio data...");
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        console.log("Audio data sent");
+                        try {
+                            // Send audio data to server
+                            connection.invoke("SendAudioData", reader.result.split(',')[1]).catch(function (err) {
+                                return console.error(err.toString());
+                            });
+                        } catch (error) {
+                            console.error("Error sending audio data:", error);
+                        }
+                    };
+                    reader.readAsDataURL(audioBlob); // Convert blob to base64
+
+                    // Stop audio stream tracks to release microphone
+                    audioStream.getTracks().forEach(track => track.stop());
+                    audioStream = null;
+                };
+
+                console.log("Starting audio recording...");
+                mediaRecorder.start();
+                document.getElementById("startAudioButton").disabled = true;
+                document.getElementById("stopAudioButton").disabled = false;
+            } catch (error) {
+                console.error("Error accessing microphone:", error);
+            }
+        });
+
+        document.getElementById("stopAudioButton").addEventListener("click", () => {
+            console.log("Stopping audio recording...");
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                try {
+                    mediaRecorder.stop();
+                } catch (error) {
+                    console.error("Error stopping audio recording:", error);
+                }
+                document.getElementById("startAudioButton").disabled = false;
+                document.getElementById("stopAudioButton").disabled = true;
+            }
+        });
+
+
+    </script>
+</body>
+</html>
