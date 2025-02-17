@@ -30,6 +30,15 @@
       '';
     };
 
+    defalutPackage.aarch64-darwin = pkgs.stdenv.mkDerivation {
+      name = "magic-mirror-server";
+      buildInputs = [ dotnet-sdk ];
+      buildScript = ''
+        dotnet publish -c Release -o dist
+        cp -r dist $out
+      '';
+    };
+
     nixosModules.magicMirrorServer = { config, pkgs, ... }: {
       systemd.services.magicMirrorServer = {
         description = "Magic Mirror C# Server";
