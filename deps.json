@@ -1,0 +1,27 @@
+{
+  "packages": {
+    "DotNetEnv": "3.1.1",
+    "Microsoft.AspNetCore.OpenApi": "9.0.0",
+    "Microsoft.AspNetCore.SignalR.Core": "1.2.0",
+    "Microsoft.AspNetCore.SignalR.Protocols.Json": "9.0.1",
+    "OpenAI": "2.1.0",
+    "Swashbuckle.AspNetCore": "7.2.0",
+    "Microsoft.AspNetCore.Authorization": "2.3.0",
+    "Microsoft.AspNetCore.Connections.Abstractions": "9.0.1",
+    "Microsoft.AspNetCore.SignalR.Common": "9.0.1",
+    "Microsoft.Extensions.ApiDescription.Server": "6.0.5",
+    "Microsoft.Extensions.Configuration": "1.1.2",
+    "Microsoft.Extensions.Configuration.Abstractions": "1.1.2",
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.1",
+    "Microsoft.Extensions.Features": "9.0.1",
+    "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
+    "Microsoft.Extensions.Options": "9.0.1",
+    "Microsoft.Extensions.Primitives": "9.0.1",
+    "Microsoft.OpenApi": "1.6.22",
+    "System.IO.Pipelines": "8.0.0",
+    "System.Memory.Data": "6.0.0",
+    "System.Text.Json": "6.0.10",
+    "System.Threading.Channels": "8.0.0"
+  },
+  "fetchedPackages": {}
+}
