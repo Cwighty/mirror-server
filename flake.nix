@@ -118,7 +118,6 @@
             {
               ExecStart = "${self.packages.${pkgs.system}.default}/bin/magic-mirror-server";
               Restart = "always";
-              WorkingDirectory = "${self.packages.${pkgs.system}.default}/lib/magic-mirror-server";
 
               # Logging configuration
               StandardOutput = "journal";
