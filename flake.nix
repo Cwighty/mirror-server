@@ -12,7 +12,13 @@
     # Support both Linux and Darwin systems
     supportedSystems = ["x86_64-linux" "aarch64-darwin" "x86_64-darwin"];
     forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-    pkgsForSystem = system: import nixpkgs {inherit system;};
+    pkgsForSystem = system:
+      import nixpkgs {
+        inherit system;
+        config = {
+          permittedInsecurePackages = [];
+        };
+      };
   in {
     packages = forAllSystems (system: let
       pkgs = pkgsForSystem system;
@@ -33,7 +39,12 @@
 
           # NuGet configuration
           dotnetFlags = ["--source" "https://api.nuget.org/v3/index.json"];
-          __noChroot = true;
+
+          # Allow network access during build for package restore
+          preBuild = ''
+            export HOME=$(mktemp -d)
+            export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
+          '';
 
           # Copy static files
           postInstall = ''
@@ -83,6 +94,18 @@
           default = null;
           description = "Path to environment file containing secrets (e.g. OPENAI_API_KEY=sk-...)";
         };
+
+        logLevel = mkOption {
+          type = types.enum ["Trace" "Debug" "Information" "Warning" "Error" "Critical"];
+          default = "Information";
+          description = "The minimum log level to display";
+        };
+
+        consoleJsonFormat = mkOption {
+          type = types.bool;
+          default = false;
+          description = "Whether to output logs in JSON format";
+        };
       };
 
       config = lib.mkIf cfg.enable {
@@ -96,6 +119,12 @@
               ExecStart = "${self.packages.${pkgs.system}.default}/bin/magic-mirror-server";
               Restart = "always";
               WorkingDirectory = "${self.packages.${pkgs.system}.default}/lib/magic-mirror-server";
+
+              # Logging configuration
+              StandardOutput = "journal";
+              StandardError = "journal";
+              LogsDirectory = "magic-mirror-server";
+              LogsDirectoryMode = "0750";
             }
             // lib.optionalAttrs (cfg.environmentFile != null) {
               EnvironmentFile = cfg.environmentFile;
@@ -104,8 +133,30 @@
           environment = {
             ASPNETCORE_ENVIRONMENT = "Production";
             ASPNETCORE_URLS = "http://0.0.0.0:${toString cfg.port}";
+
+            # Logging configuration
+            Logging__LogLevel__Default = cfg.logLevel;
+            Logging__LogLevel__Microsoft = cfg.logLevel;
+            Logging__LogLevel__Microsoft__AspNetCore = cfg.logLevel;
+
+            # Console logging format
+            Logging__Console__FormatterName =
+              if cfg.consoleJsonFormat
+              then "Json"
+              else "Simple";
+            Logging__Console__FormatterOptions__IncludeScopes = "true";
+            Logging__Console__FormatterOptions__TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
+            Logging__Console__FormatterOptions__UseUtcTimestamp = "true";
           };
         };
+
+        # Add systemd journal configuration
+        services.journald.extraConfig = ''
+          # Increase journal size limit
+          SystemMaxUse=2G
+          # Keep logs for 14 days
+          MaxRetentionSec=14day
+        '';
       };
     };
   };
