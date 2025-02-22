@@ -78,9 +78,10 @@
           description = "Port to listen on";
         };
 
-        openAIApiKey = mkOption {
-          type = types.str;
-          description = "OpenAI API Key";
+        environmentFile = mkOption {
+          type = types.nullOr types.path;
+          default = null;
+          description = "Path to environment file containing secrets (e.g. OPENAI_API_KEY=sk-...)";
         };
       };
 
@@ -90,16 +91,19 @@
           wantedBy = ["multi-user.target"];
           after = ["network.target"];
 
-          serviceConfig = {
-            ExecStart = "${self.packages.${pkgs.system}.default}/bin/magic-mirror-server";
-            Restart = "always";
-            WorkingDirectory = "${self.packages.${pkgs.system}.default}/lib/magic-mirror-server";
-          };
+          serviceConfig =
+            {
+              ExecStart = "${self.packages.${pkgs.system}.default}/bin/magic-mirror-server";
+              Restart = "always";
+              WorkingDirectory = "${self.packages.${pkgs.system}.default}/lib/magic-mirror-server";
+            }
+            // lib.optionalAttrs (cfg.environmentFile != null) {
+              EnvironmentFile = cfg.environmentFile;
+            };
 
           environment = {
             ASPNETCORE_ENVIRONMENT = "Production";
             ASPNETCORE_URLS = "http://0.0.0.0:${toString cfg.port}";
-            OPENAI_API_KEY = cfg.openAIApiKey;
           };
         };
       };
