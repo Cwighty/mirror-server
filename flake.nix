@@ -148,6 +148,11 @@
           };
         };
 
+        # Open firewall port for both HTTP and WebSocket traffic
+        networking.firewall = {
+          allowedTCPPorts = [cfg.port];
+        };
+
         # Add systemd journal configuration
         services.journald.extraConfig = ''
           # Increase journal size limit
