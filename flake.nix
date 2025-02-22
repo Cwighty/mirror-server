@@ -59,7 +59,6 @@
           export ASPNETCORE_ENVIRONMENT=Production
           export ASPNETCORE_CONTENTROOT="${server}/lib/magic-mirror-server"
           export ASPNETCORE_WEBROOT="${server}/lib/magic-mirror-server/wwwroot"
-          export ASPNETCORE_URLS="http://localhost:5001"
 
           exec ${server}/bin/MagicMirror "$@"
         '';
