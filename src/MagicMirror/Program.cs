@@ -20,10 +20,10 @@ builder.Services.AddSignalR(hubOptions =>
 builder.Services.AddControllers(); // If you need controllers as well
 
 // Register OpenAI Services with Dependency Injection
-builder.Services.AddScoped<WhisperService>();
-builder.Services.AddScoped<LLMService>();
-builder.Services.AddScoped<TTSService>();
-builder.Services.AddScoped<SimulationBroadcaster>();
+builder.Services.AddSingleton<WhisperService>();
+builder.Services.AddSingleton<LLMService>();
+builder.Services.AddSingleton<TTSService>();
+builder.Services.AddSingleton<SimulationBroadcaster>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
