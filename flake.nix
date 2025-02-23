@@ -137,6 +137,8 @@
             Logging__LogLevel__Microsoft = cfg.logLevel;
             Logging__LogLevel__Microsoft__AspNetCore = cfg.logLevel;
 
+            Audio__SimulationMode = "false";
+
             # Console logging format
             Logging__Console__FormatterName =
               if cfg.consoleJsonFormat
